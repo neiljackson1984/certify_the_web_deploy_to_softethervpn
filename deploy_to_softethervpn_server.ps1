@@ -33,7 +33,8 @@
 #command to update the tls certificate for softethervpn server:
 
 #the script is provided the parameter $result, which contains status and details of the certificate renewal process performed by certify the web.
-param($result)   # required to access the $result parameter
+param($result, $softethervpnServerPassword)   # required to access the $result parameter
+
 
 $passwordOfthePfxFile = ""
 $pathWithinLocalCertificateStorageSystemWhereTheCertificateIsStored = "cert:\LocalMachine\My"
@@ -87,8 +88,8 @@ $result.ManagedItem | Out-File $pathOfLogFile -Append
 # #install chocolatey:
 # Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
-# #use chocoaltey to install openssl:
-# choco install OpenSSL.Light
+# #use chocolatey to install openssl:
+# choco install OpenSSL.Light --confirm
 
 #add openssl directory to system path
 # Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value ((Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).path + ";" + "C:\Program Files\OpenSSL\bin")
@@ -120,7 +121,13 @@ $result.ManagedItem | Out-File $pathOfLogFile -Append
 # # # # $softethervpnServerPassword = ConvertFrom-SecureString -SecureString $secureSoftethervpnServerPassword -AsPlainText 
 ## I give up:
 
-$softethervpnServerPassword = (cat $pathOfFileContainingSoftethervpnServerPassword)
+
+if([string]::IsNullOrEmpty($softethervpnServerPassword)){
+    ("softethervpnServerPassword seems not to have been passed as a parameter, so we will attempt to read it from the file. $pathOfFileContainingSoftethervpnServerPassword"     )  | Out-File $pathOfLogFile -Append
+    $softethervpnServerPassword = (cat $pathOfFileContainingSoftethervpnServerPassword)
+} else {
+     ("softethervpnServerPassword was passed as a parameter, so we will not bother to try to read the password from a file."     )  | Out-File $pathOfLogFile -Append
+}    
 
 # ( "softethervpnServerPassword: "                 + $softethervpnServerPassword               )  | Out-File $pathOfLogFile -Append
 
